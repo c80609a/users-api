@@ -1,24 +1,19 @@
-# README
+## Prerequisites
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+```bash
+$ ruby -v # ruby 2.3.3
+$ rails -v # Rails 5.1.2
+$ rails new users-api --api -T -d mysql
+$ bundle install
+$ rails g rspec:install
+```
 
-Things you may want to cover:
+## API Endpoints
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+| Endpoint	                | Functionality                |
+| :---------------------:   | :---------------------------:|
+| `GET /users`	            |  List all users              |
+| `POST /users`	            |  Create a new user           |
+| `GET /users/:id`	        |  Get a user                  |
+| `PUT /users/:id`	        |  Update a user               |
+| `DELETE /users/:id`	    |  Delete a user               |
