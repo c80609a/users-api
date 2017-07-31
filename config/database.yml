@@ -7,12 +7,12 @@ default: &default
 
 development:
   <<: *default
-  database: users-api_develop_db
+  database: users_api_develop_db
 
 test:
   <<: *default
-  database: users-api_test
+  database: users_api_test
 
 production:
   <<: *default
-  database: users-api_db
+  database: users_api_db
