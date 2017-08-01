@@ -97,18 +97,18 @@ $ rails g rspec:install
 Лабаем модели и контроллер, проверяем:
 
 ```bash
-curl -X POST localhost:3000/user_ads -d 'title=test&email=email@mail.ru&phone=8123551515&org=microsoft&pos=manager'
+curl -X POST localhost:3000/user_ads -d 'title=test&email=email@mail.ru&phone=8123551515&org=microsoft&pos=manager' -H 'X-Requested-With:XMLHttpRequest'
 #  SQL (0.4ms)  INSERT INTO `users` (`type`, `title`, `email`, `phone`, `created_at`, `updated_at`) VALUES ('UserAd', 'test', 'email@mail.ru', '8123551515', '2017-08-01 00:04:01', '2017-08-01 00:04:01')
 #  SQL (0.4ms)  INSERT INTO `user_ad_companions` (`user_ad_id`, `pos`, `org`, `created_at`, `updated_at`) VALUES (2, 'manager', 'microsoft', '2017-08-01 00:04:01', '2017-08-01 00:04:01')
 
-curl localhost:3000/user_ads/1
+curl localhost:3000/user_ads/1 -H 'X-Requested-With:XMLHttpRequest'
 # UserAd Load (0.7ms)  SELECT  `users`.* FROM `users` WHERE `users`.`type` IN ('UserAd') AND `users`.`id` = 1 LIMIT 1
 # {"id":1,"title":"test","email":"email@mail.ma","phone":"+7(960)540-32-23","created_at":"2017-07-31T23:07:17.000Z","updated_at":"2017-07-31T23:07:17.000Z"}
 
-curl -X PUT localhost:3000/user_ads/1 -d 'title=test2'
+curl -X PUT localhost:3000/user_ads/1 -d 'title=test2' -H 'X-Requested-With:XMLHttpRequest'
 # SQL (1.1ms)  UPDATE `users` SET `title` = 'test2', `updated_at` = '2017-08-01 00:09:12' WHERE `users`.`id` = 1
 
-curl -X DELETE localhost:3000/user_ads/1
+curl -X DELETE localhost:3000/user_ads/1 -H 'X-Requested-With:XMLHttpRequest' 
 #  SQL (41.1ms)  DELETE FROM `user_ad_companions` WHERE `user_ad_companions`.`id` = 1
 #   SQL (0.5ms)  DELETE FROM `users` WHERE `users`.`type` IN ('UserAd') AND `users`.`id` = 1
 
