@@ -1,22 +1,22 @@
 # Задача
 
-~~Есть сущность пользователь (User). Он может быть трех типов:
-~~
+Есть сущность пользователь (User). Он может быть трех типов:
+
 - Администратор
 - Модератор
 - Исполнитель
 - Рекламодатель
-~~
+
 Каждый тип юзера, характеризуется опеределенным набором 
 свойств, какие-то свойства общие для всех типов 
 пользователей, какие-то характеризуют конкретного. 
 
-~~Обязательные общие свойства:
+Обязательные общие свойства:
 - почта;
 - имя;
 - телефон.
 
-~~Свойства рекламодателя:
+Свойства рекламодателя:
 - должность;
 - название организации.
 
@@ -31,34 +31,6 @@ json-представление данных о пользователе (рек
  
 Вьюхи делать не нужно, достаточно рабочих роутов. 
 Роуты должны быть доступны только для ajax-запросов. 
-
-```
-    POST users#create
-    {
-        kind,
-        title,
-        tel,
-        email,
-        props: {
-          12: 'Менеджер',
-          1: 'Microsoft'
-        }
-    }
-    
-    PATCH users#update:id
-    {
-        title,
-        tel,
-        email,
-        props: {
-          12: 'Менеджер',
-          1: 'Microsoft'
-        }
-    }
-    
-    GET users#show:id
-```
-
 
 3) Бизнес логику и валидации реализовать не в моделях 
 ActiveRecord. Модели использовать только для доступа 
@@ -94,7 +66,126 @@ $ rails g rspec:install
 
 # Процесс
 
-Лабаем модели и контроллер, проверяем:
+Создаются 3 модели и 2 таблицы.
+
+### Миграции:
+
+```ruby
+class CreateUsers < ActiveRecord::Migration[5.1]
+  def change
+    create_table :users do |t|
+      t.string :type, null: false
+      t.string :title, null: false
+      t.string :email, null: false
+      t.string :phone, null: false
+
+      t.timestamps
+    end
+  end
+end
+```
+
+```ruby
+class CreateUserAdCompanions < ActiveRecord::Migration[5.1]
+  def change
+    create_table :user_ad_companions do |t|
+      t.references :user_ad
+      t.string :pos
+      t.string :org
+
+      t.timestamps
+    end
+  end
+end
+```
+
+### Модели
+
+```ruby
+class User < ActiveRecord::Base
+  validates :title, presence: true
+  validates :email,
+            presence: true,
+            format: { with: /\A([a-z0-9_.-]+)@([a-z0-9-]+)\.[a-z.]+\z/}
+  validates :phone,
+            presence: true,
+            format: { with: /\A((8|\+7)?[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}\z/ }
+end
+```
+
+```ruby
+class UserAd < User
+
+  has_one :companion,
+          class_name: 'UserAdCompanion',
+          inverse_of: :user_ad,
+          dependent: :destroy,
+          autosave: true
+
+  delegate :pos,
+           :org,
+           :pos=,
+           :org=,
+           to: :lazily_companion
+
+  private
+
+  def lazily_companion
+    companion || build_companion
+  end
+
+end
+```
+
+```ruby
+class UserAdCompanion < ActiveRecord::Base
+  # Attributes: pos, org
+  belongs_to :user_ad, inverse_of: :companion
+  validates :user_ad, presence: true
+end
+```
+
+### Контроллер
+
+Контроллер обслуживает маршруты из `routes.rb` и использует `concern` 
+который уменьшает количество boilerplate кода в коде контроллера:
+
+```ruby
+module ExceptionHandler
+  extend ActiveSupport::Concern
+
+  included do
+
+    # define custom handlers
+    rescue_from ActiveRecord::RecordInvalid, with: :four_twenty_two
+    rescue_from ActiveRecord::RecordNotFound do |e|
+      json_response({message: e.message}, :not_found)
+    end
+
+  end
+
+  private
+
+  # JSON ответ со статус-кодом 422 - unprocessable_entity
+  def four_twenty_two(e)
+    json_response({message: e.message}, :unprocessable_entity)
+  end
+
+end
+```
+
+Контроллер обслуживает маршруты из `routes.rb` и использует `concern` помогаеющий
+с `json`-ответами:
+
+```ruby
+module Response
+  def json_response(object, status = :ok)
+    render json: object, status: status
+  end
+end
+```
+
+## Проверяем
 
 ```bash
 curl -X POST localhost:3000/user_ads -d 'title=test&email=email@mail.ru&phone=8123551515&org=microsoft&pos=manager' -H 'X-Requested-With:XMLHttpRequest'
